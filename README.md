@@ -39,4 +39,4 @@ mfcc <- MFCC::mfcc_function(sound.data, sample.rate, freq.lower = 0,
 
 
 #### Exemplos mais detalhados
-Exemplos com gráficos presente em [Tutorial](https://jessicasousa.github.io/MFCC/inst/doc/example.html)
+Exemplos com gráficos presente o seguinte [link](https://jessicasousa.github.io/MFCC/inst/doc/example.html)
