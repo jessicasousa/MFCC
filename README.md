@@ -36,3 +36,7 @@ mfcc <- MFCC::mfcc_function(sound.data, sample.rate, freq.lower = 0,
                             frame.size = 0.025, frame.stride = 0.01,
                             nfft = 512, num.filters = 40, num.ceps = 13) 
 ```
+
+
+#### Exemplos mais detalhados
+Exemplos com gráficos presente em [Tutorial](https://jessicasousa.github.io/MFCC/inst/doc/example.html)
