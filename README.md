@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/JessicaSousa/MFCC.svg?branch=master)](https://travis-ci.org/JessicaSousa/MFCC)
 # Implementação dos MFCC em R
 
 O presente repositório contém a implementação dos Mel-frequency cepstral coefficients (MFCCs) em R. O pacote `MFCC` foi desenvolvido utilizando o controle de versão do Github. Então você pode fazer download dele utilizando o seguinte comando no terminal do R:
