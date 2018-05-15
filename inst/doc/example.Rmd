@@ -1,0 +1,201 @@
+---
+title: "Implementaçao das MFCCs em R"
+author: "Jessica Cardoso"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Na área de reconhecimento automático de voz, uma das primeiras etapas está no processo de extração de características dos sinais de voz, a partir dessas características, estas são utilizadas com o objetivo de encontrar padrões e/ou elementos característicos que possam descrever determinado conteúdo. Em uma dessas técnicas de reconhecimento de voz está o Mel-Frequency Cepstral Coefficients (MFCCs), a qual foi introduzida na década de 1980 por Davis e Mermelstein. 
+
+A operação do MFCC foi implementado para a tarefa 2 da disciplina de Fundamentos de Computação Gráfica, a linguagem de programação escolhida foi o R. O código encontra-se disponível em https://github.com/JessicaSousa/MFCC.
+
+##Requerimentos
+
+* R instalado na máquina, que pode ser obtido no site do [CRAN](https://www.r-project.org/).
+* Instalar a última versão do ```devtools``` contido no CRAN executando o seguinte comando no console do R: ```install.packages("devtools")```.
+* Instalar a biblioteca para carregar arquivo de som ```tunerR```, executando no console do R o comando ```install.packages("tuneR")```
+* Para instalar o pacote de MFCC, basta executar o seguinte comando ```devtools::install_github("JessicaSousa/QualisR")```, no console do R.
+
+
+## Informações do pacote
+
+Após possuir o pacote instalado, para usá-lo basta utilizar a seguinte função ```library(MFCC)```. O comando ```lsf.str("package:MFCC")``` lista as funções e as respectivas assinaturas do pacote MFCC. Para saber informações sobre alguma função, pode ser utilizado ```help('convert_hertz_to_mel')```
+
+
+## Aplicação do pacote MFCC
+
+No seguinte trecho é realizado o carregamento dos pacotes necessários e o arquivo de áudio o qual será aplicado as funções para o MFCC.
+```{r}
+#install.packages('tuneR')
+library(MFCC)
+library(tuneR)
+
+#Carregar arquivo de áudio exemplo
+sound.data <- MFCC::sound.data
+sound <- sound.data@left #valores do arquivo de áudio
+sample.rate <- sound.data@samp.rate #sample rate do arquivo de áudio
+sound.time <- 0:(length(sound)-1)/sample.rate
+```
+
+O gráfico que ilustra os 3,5 segundos desse áudio pode ser visualizado através da biblioteca `ggplot2`
+
+```{r,fig.height = 2, fig.width = 7, fig.align = "center"}
+library(ggplot2)
+
+data.raw <- data.frame(x = sound.time, y = sound)
+
+ggplot(data.raw, aes(x, y)) + geom_line() +
+  xlab("Tempo (s)") + ylab("Amplitude") #+
+
+```
+
+## Etapas do MFCC
+
+
+### Pré-ênfase
+Inicialmente é aplicado um filtro de pré-ênfase sobre o sinal, com o objetivo de amplificar as altas frequências. A aplicação do filtro pode ser obtida com a seguinte operação:
+
+$$y(t) = x(t) - \alpha x(t-1)$$
+
+O qual foi implementa sobre o nome `apply_preemphasis`, os valores padrões de alfa são 0,95 ou 0,97. A seguir é ilustrado o resultado da aplicação do seguinte filtro no sinal anterior.
+```{r,fig.height = 2, fig.width = 7, fig.align = "center"}
+
+emphasized_signal <- apply_preemphasis(sound, 0.97)
+
+data.emphasized <- data.frame(x = sound.time, y = emphasized_signal)
+
+#Exibição
+ggplot(data.emphasized, aes(x, y)) + geom_line() +
+  xlab("Tempo (s)") + ylab("Amplitude")
+```
+
+
+As etapas do algoritmo são:
+
+1. Dividir o sinal em short frames.
+  * Sobre cada frame, aplicar a operação de window, o qual é dada pela seguinte equação.
+  $$w[n] = 0,54 - 0,46 cos(\frac{2\pi n}{N - 1})$$ onde $0 <= n <= N-1$, sendo N o comprimento da janela.
+2. Para cada frame, calcular o espectro de potência, o qual é dado pela seguinte equação:
+  $$P = \frac{|FFT(x_i)|^2}{2}$$ 
+3. Aplicar o mel filterbank no espectro de potência e somar a energia em cada filtro.
+ $$H_m(k) =
+  \begin{cases}
+      \hfill 0                                      \hfill & k < f(m - 1) \\
+      \\
+      \hfill \dfrac{k - f(m - 1)}{f(m) - f(m - 1)}  \hfill & f(m - 1) \leq k < f(m) \\
+      \\
+      \hfill 1                                      \hfill & k = f(m) \\
+      \\
+      \hfill \dfrac{f(m + 1) - k}{f(m + 1) - f(m)}  \hfill & f(m) < k \leq f(m + 1) \\
+      \\
+      \hfill 0                                      \hfill & k > f(m - 1) \\
+  \end{cases}$$
+4. Obter o logaritmo de todas as energias do filterbanks.
+5. Pegar o DCT das energias dos logs dos filterbanks.
+6. Manter os coeficientes DCT 2-13, descartar o resto.
+
+As etapas 1, 2, 3 e 4 são obtidas nas seguintes linhas de códigos:
+
+```{r}
+fft.npoints <- 512 #números de pontos considerados para o cálculo da fft 
+#help(nfft) #para mais informações
+freq.lower <- 0 #frequência mínima em hertz considerada
+freq.upper <- sample.rate / 2 #frequência máxima em hertz considerada
+num.filters <- 40 #número filtros considerados para o filterbank
+
+#1.Dividir o sinal em short frames.
+frames <- frame_the_signal(emphasized_signal, sample.rate)
+frames <- apply_window_hamming(frames) #aplicar a função de hamming para cada frame
+
+#2.Para cada quadro, calcular o power spectrum
+power.frames <- compute_power_spectrum(frames, n = fft.npoints)
+
+#3.Aplicar o mel filterbank aos power spectra, somar a energia em cada filtro
+fbanks <- compute_mel_filterbanks(freq.lower,freq.upper, num.filters, fft.npoints, sample.rate)
+#Para calcular a energia do filter bank, multiplica-se cada filter bank com seus power spectrum.
+filter.banks <- power.frames %*% t(fbanks)
+
+#4. Obter o logaritmo de todas as filterbank energies
+filter.banks[filter.banks == 0] <- .Machine$double.eps #substituir os zeros para evitar problemas com log
+filter.banks <- 20 * log10(filter.banks)
+```
+
+A visualização dos filterbanks pode ser vista com o seguinte trecho de código:
+
+```{r,fig.height = 2, fig.width = 7, fig.align = "center"}
+x <- seq(from = freq.lower, to = freq.upper, length.out = ncol(fbanks)) %>% rep(num.filters)
+y <- t(fbanks)
+y %<>% as.data.frame() %>% tidyr::gather()
+
+data <- data.frame(x = x, values = y$value, filters = y$key)
+
+ggplot(data, aes(x, values, colour = filters)) +
+  geom_line() + xlab("Frequência") + ylab("Amplitude") + theme(legend.position="none") +
+  scale_x_continuous(expand = c(0, 0)) + 
+  scale_y_continuous(expand = c(0, 0))
+```
+
+O espectograma da aplicação do Filter Bank ao Power Spectrum é ilustrado a seguir:
+
+```{r,fig.height = 2, fig.width = 7, fig.align = "center"}
+
+#Organizar dado para melhor visualização
+fbanks.spec <- reshape2::melt(filter.banks)
+fbanks.spec$Var1 <- fbanks.spec$Var1 / 100 
+fbanks.spec$Var2 <- fbanks.spec$Var2 / 10 
+
+ggplot(fbanks.spec, aes(Var1,Var2)) + geom_raster(aes(fill = value)) +
+  scale_fill_gradientn(colours = rainbow(10)) +
+  xlab("Tempo (s)") + ylab("Frequência (kHz)") + ggtitle("Espectograma do sinal") +
+  scale_x_continuous(expand = c(0, 0)) + 
+  scale_y_continuous(expand = c(0, 0)) 
+
+```
+
+Em seguida, obtém-se as DCTs sobre o log de filterbanks, mantém-se apenas os coeficientes de 2-13.
+```{r}
+#5. Obter a DCT do log das filterbank energies.
+mfcc <- t(apply(filter.banks, 1, function(x) apply_dct(x)))
+
+#6. Manter os coeficientes DCT 2-13, descartar o resto..
+mfcc <- mfcc[, 2:13]
+```
+
+Para realce de sinal pode ser aplicado o sinusoidal liftering aos MFCCs, o qual é descrito pela seguinte equação:
+
+$$\hat{MFCC_i} = 1 + (\frac{w_i  D}{2})\sin(\frac{π n}{D})$$
+
+E está implementado sobre a seguinte função `apply_lifter`:
+```{r,fig.height = 2, fig.width = 7, fig.align = "center"}
+#Aplicar o sinusoidal liftering aos MFCCs
+mfcc.lift <- apply_lifter(mfcc)
+
+
+#Organizar dado para melhor visualização
+mfccs.spec <- reshape2::melt(mfcc.lift)
+mfccs.spec$Var1 <- mfccs.spec$Var1 / 100 
+
+#Espectograma do MFCCs
+ggplot(mfccs.spec, aes(Var1,Var2, fill=value)) + geom_raster(aes(fill = value)) +
+  scale_fill_gradientn(colours = rainbow(10)) +
+  xlab("Tempo (s)") + ylab("Coeficientes das MFCCs") + ggtitle("MFCCs") +
+  scale_x_continuous(expand = c(0, 0)) + 
+  scale_y_continuous(expand = c(0, 0)) 
+
+
+```
+
+
+
+

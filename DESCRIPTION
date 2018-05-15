@@ -1,0 +1,22 @@
+Package: MFCC
+Title: Calculo dos Mel Frequency Cepstral Coefficents
+Version: 0.1.0
+Authors@R: person("Jessica", "Cardoso", email = "jessicacardosops@gmail.com", 
+    role = c("aut", "cre"))
+Description: Trabalho a disciplina de FCF. Implement. dos MFCCs para um sinal(http://www.practicalcryptography.com/miscellaneous/machine-learning/guide-mel-frequency-cepstral-coefficients-mfccs/).
+Depends: R (>= 2.10)
+License: GPL-3 + file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
+Imports: magrittr,
+    purrr,
+    signal
+Suggests: knitr,
+    rmarkdown,
+    reshape2,
+    ggplot2,
+    tuneR,
+    tidyr,
+    testthat
+VignetteBuilder: knitr
