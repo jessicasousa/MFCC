@@ -44,4 +44,5 @@ Exemplos com gráficos presente no seguinte [link](https://jessicasousa.github.i
 ### Referências
 
 [Practical Cryptography](http://practicalcryptography.com/miscellaneous/machine-learning/guide-mel-frequency-cepstral-coefficients-mfccs/)
+
 [SR Wiki](http://recognize-speech.com/feature-extraction/mfcc)
