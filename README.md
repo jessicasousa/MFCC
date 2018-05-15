@@ -39,4 +39,9 @@ mfcc <- MFCC::mfcc_function(sound.data, sample.rate, freq.lower = 0,
 
 
 #### Exemplos mais detalhados
-Exemplos com gráficos presente o seguinte [link](https://jessicasousa.github.io/MFCC/inst/doc/example.html)
+Exemplos com gráficos presente no seguinte [link](https://jessicasousa.github.io/MFCC/inst/doc/example.html)
+
+### Referências
+
+http://practicalcryptography.com/miscellaneous/machine-learning/guide-mel-frequency-cepstral-coefficients-mfccs/
+http://recognize-speech.com/feature-extraction/mfcc
