@@ -15,8 +15,7 @@ Imports: magrittr,
 Suggests: knitr,
     rmarkdown,
     reshape2,
-    ggplot2,
     tuneR,
     tidyr,
-    testthat
+    plotly
 VignetteBuilder: knitr
