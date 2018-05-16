@@ -32,7 +32,7 @@ sound <- sound.data@left # sinal de áudio
 sample.rate <- sound.data@samp.rate 
 
 #Calcular as MFCCs para o sinal
-mfcc <- MFCC::mfcc_function(sound.data, sample.rate, freq.lower = 0, 
+mfcc <- MFCC::mfcc_function(sound, sample.rate, freq.lower = 0, 
                             freq.upper = sample.rate / 2,
                             frame.size = 0.025, frame.stride = 0.01,
                             nfft = 512, num.filters = 40, num.ceps = 13) 
