@@ -17,5 +17,6 @@ Suggests: knitr,
     reshape2,
     tuneR,
     tidyr,
-    plotly
+    plotly,
+    ggplot2
 VignetteBuilder: knitr
