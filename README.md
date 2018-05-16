@@ -39,7 +39,7 @@ mfcc <- MFCC::mfcc_function(sound.data, sample.rate, freq.lower = 0,
 ```
 
 
-#### Exemplos mais detalhados
+#### Exemplos mais detalhados:
 Exemplos com gráficos interativos podem ser encontrados no seguinte [link](https://jessicasousa.github.io/MFCC/inst/doc/example.html). Você pode aplicar o zoom, mover o gráfico e ver os valores dos elementos, passando o mouse sobre os elementos do gráfico.
 
 ### Referências
